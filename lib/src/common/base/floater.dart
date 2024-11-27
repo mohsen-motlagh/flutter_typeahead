@@ -69,8 +69,7 @@ class _FloaterTarget extends SingleChildRenderObjectWidget {
   }
 
   @override
-  void updateRenderObject(
-      BuildContext context, _RenderFloaterTarget renderObject) {
+  void updateRenderObject(BuildContext context, _RenderFloaterTarget renderObject) {
     renderObject.controller = link;
   }
 
@@ -349,15 +348,14 @@ class _FloaterState extends State<Floater> with WidgetsBindingObserver {
           final FloaterInfo(:size, :offset) = widget.link.value;
           OverlayState overlay = Overlay.of(context);
 
-          final RenderBox overlayBox =
-              overlay.context.findRenderObject()! as RenderBox;
+          final RenderBox? overlayBox = overlay.context.findRenderObject() as RenderBox?;
 
           Size available;
           Alignment targetAnchor;
           Alignment followerAnchor;
 
-          Offset overlayOffset = overlayBox.localToGlobal(Offset.zero);
-          Size overlaySize = overlayBox.size;
+          Offset overlayOffset = overlayBox?.localToGlobal(Offset.zero) ?? Offset.zero;
+          Size overlaySize = overlayBox?.size ?? Size.zero;
 
           MediaQueryData mediaQuery = MediaQuery.of(overlay.context);
           EdgeInsets viewPadding = mediaQuery.padding + mediaQuery.viewInsets;
