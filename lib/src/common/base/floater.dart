@@ -341,7 +341,7 @@ class _FloaterState extends State<Floater> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     OverlayState? overlay = Overlay.maybeOf(context);
-    RenderBox? box = context.findRenderObject() as RenderBox?;
+    RenderBox? box = overlay?.context.findRenderObject() as RenderBox?;
     if (overlay == null || overlay.context.mounted == false || box == null || box.hasSize == false) {
       print(
           'overlay == $overlay, overlay.context.mounted == ${overlay?.context.mounted}, box == $box, box.hasSize == ${box?.hasSize}');
