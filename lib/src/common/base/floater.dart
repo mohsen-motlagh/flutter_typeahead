@@ -347,145 +347,140 @@ class _FloaterState extends State<Floater> with WidgetsBindingObserver {
         builder: (context) {
           final FloaterInfo(:size, :offset) = widget.link.value;
           OverlayState? overlay = Overlay.maybeOf(context);
-          if (overlay == null || overlay.context.mounted == false) {
-            return const SizedBox();
-          }
-          print('ksdjhgjkhgurrhg');
-          //final RenderBox? overlayBox = overlay.context.findRenderObject() as RenderBox?;
           RenderBox? box = context.findRenderObject() as RenderBox?;
-          if (box == null || box.hasSize == false) {
-            print('ksdjhgjkhgurrhg 11111111');
-            return const SizedBox();
-          }
-          print('ksdjhgjkhgurrhg 22222222');
+          if (overlay != null || overlay!.context.mounted == true && (box != null || box?.hasSize == true)) {
+            print('ksdjhgjkhgurrhg');
+            //final RenderBox? overlayBox = overlay.context.findRenderObject() as RenderBox?;
 
-          Size available;
-          Alignment targetAnchor;
-          Alignment followerAnchor;
+            Size available;
+            Alignment targetAnchor;
+            Alignment followerAnchor;
 
-          Offset overlayOffset = box.localToGlobal(Offset.zero);
-          Size overlaySize = box.size;
+            Offset overlayOffset = box!.localToGlobal(Offset.zero);
+            Size overlaySize = box.size;
 
-          MediaQueryData mediaQuery = MediaQuery.of(overlay.context);
-          EdgeInsets viewPadding = mediaQuery.padding + mediaQuery.viewInsets;
+            MediaQueryData mediaQuery = MediaQuery.of(overlay.context);
+            EdgeInsets viewPadding = mediaQuery.padding + mediaQuery.viewInsets;
 
-          overlayOffset = Offset(
-            max(overlayOffset.dx, viewPadding.left),
-            max(overlayOffset.dy, viewPadding.top),
-          );
+            overlayOffset = Offset(
+              max(overlayOffset.dx, viewPadding.left),
+              max(overlayOffset.dy, viewPadding.top),
+            );
 
-          overlaySize = Size(
-            overlaySize.width - viewPadding.left - viewPadding.right,
-            overlaySize.height - viewPadding.top - viewPadding.bottom,
-          );
+            overlaySize = Size(
+              overlaySize.width - viewPadding.left - viewPadding.right,
+              overlaySize.height - viewPadding.top - viewPadding.bottom,
+            );
 
-          Offset floaterOffset = offset - overlayOffset;
+            Offset floaterOffset = offset - overlayOffset;
 
-          floaterOffset = Offset(
-            max(0, floaterOffset.dx),
-            max(0, floaterOffset.dy),
-          );
+            floaterOffset = Offset(
+              max(0, floaterOffset.dx),
+              max(0, floaterOffset.dy),
+            );
 
-          EdgeInsets padding = viewPadding;
+            EdgeInsets padding = viewPadding;
 
-          AxisDirection direction = widget.direction;
+            AxisDirection direction = widget.direction;
 
-          available = getDiretionSize(
-            direction,
-            overlaySize,
-            floaterOffset,
-            widget.offset,
-            size,
-          );
-
-          if (widget.autoFlip && available.height < widget.autoFlipHeight) {
-            AxisDirection opposite = flipAxisDirection(widget.direction);
-            Size maybeAvailable = getDiretionSize(
-              opposite,
+            available = getDiretionSize(
+              direction,
               overlaySize,
               floaterOffset,
               widget.offset,
               size,
             );
-            if (maybeAvailable.height > available.height) {
-              direction = opposite;
-              available = maybeAvailable;
+
+            if (widget.autoFlip && available.height < widget.autoFlipHeight) {
+              AxisDirection opposite = flipAxisDirection(widget.direction);
+              Size maybeAvailable = getDiretionSize(
+                opposite,
+                overlaySize,
+                floaterOffset,
+                widget.offset,
+                size,
+              );
+              if (maybeAvailable.height > available.height) {
+                direction = opposite;
+                available = maybeAvailable;
+              }
             }
-          }
 
-          available = Size(
-            max(0, available.width),
-            max(0, available.height),
-          );
-
-          (targetAnchor, followerAnchor) = getDirectionAnchors(direction);
-          padding = getDirectionPadding(direction, padding);
-
-          BoxConstraints constraints = BoxConstraints(
-            maxWidth: available.width,
-            maxHeight: available.height,
-          );
-
-          Size target = Size(
-            min(size.width, available.width),
-            min(size.height, available.height),
-          );
-
-          if (widget.followWidth) {
-            constraints = constraints.enforce(
-              BoxConstraints(
-                maxWidth: target.width,
-              ),
+            available = Size(
+              max(0, available.width),
+              max(0, available.height),
             );
-          }
-          if (widget.followHeight) {
-            constraints = constraints.enforce(
-              BoxConstraints(
-                maxHeight: target.height,
-              ),
-            );
-          }
 
-          return CompositedTransformFollower(
-            showWhenUnlinked: false,
-            link: widget.link.layerLink,
-            offset: getDirectionOffset(
-              direction,
-              Offset.zero,
-              widget.offset,
-            ),
-            targetAnchor: targetAnchor,
-            followerAnchor: followerAnchor,
-            child: Padding(
-              padding: padding,
-              child: MediaQuery.removePadding(
-                context: context,
-                child: MediaQuery.removeViewInsets(
+            (targetAnchor, followerAnchor) = getDirectionAnchors(direction);
+            padding = getDirectionPadding(direction, padding);
+
+            BoxConstraints constraints = BoxConstraints(
+              maxWidth: available.width,
+              maxHeight: available.height,
+            );
+
+            Size target = Size(
+              min(size.width, available.width),
+              min(size.height, available.height),
+            );
+
+            if (widget.followWidth) {
+              constraints = constraints.enforce(
+                BoxConstraints(
+                  maxWidth: target.width,
+                ),
+              );
+            }
+            if (widget.followHeight) {
+              constraints = constraints.enforce(
+                BoxConstraints(
+                  maxHeight: target.height,
+                ),
+              );
+            }
+
+            return CompositedTransformFollower(
+              showWhenUnlinked: false,
+              link: widget.link.layerLink,
+              offset: getDirectionOffset(
+                direction,
+                Offset.zero,
+                widget.offset,
+              ),
+              targetAnchor: targetAnchor,
+              followerAnchor: followerAnchor,
+              child: Padding(
+                padding: padding,
+                child: MediaQuery.removePadding(
                   context: context,
-                  child: Align(
-                    alignment: followerAnchor,
-                    child: ConstrainedBox(
-                      constraints: constraints,
-                      child: _FloaterProvider(
-                        data: FloaterData(
-                          size: Size(
-                            constraints.maxWidth,
-                            constraints.maxHeight,
+                  child: MediaQuery.removeViewInsets(
+                    context: context,
+                    child: Align(
+                      alignment: followerAnchor,
+                      child: ConstrainedBox(
+                        constraints: constraints,
+                        child: _FloaterProvider(
+                          data: FloaterData(
+                            size: Size(
+                              constraints.maxWidth,
+                              constraints.maxHeight,
+                            ),
+                            offset: floaterOffset,
+                            direction: widget.direction,
+                            effectiveDirection: direction,
                           ),
-                          offset: floaterOffset,
-                          direction: widget.direction,
-                          effectiveDirection: direction,
-                        ),
-                        child: Builder(
-                          builder: widget.builder,
+                          child: Builder(
+                            builder: widget.builder,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          );
+            );
+          }
+          return const SizedBox();
         },
       ),
     );
