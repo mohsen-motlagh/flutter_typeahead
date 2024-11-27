@@ -348,14 +348,18 @@ class _FloaterState extends State<Floater> with WidgetsBindingObserver {
           final FloaterInfo(:size, :offset) = widget.link.value;
           OverlayState overlay = Overlay.of(context);
 
-          final RenderBox? overlayBox = overlay.context.findRenderObject() as RenderBox?;
+          //final RenderBox? overlayBox = overlay.context.findRenderObject() as RenderBox?;
+          RenderBox? box = overlay.context.findRenderObject() as RenderBox?;
+          if (box == null || box.hasSize == false) {
+            return const SizedBox();
+          }
 
           Size available;
           Alignment targetAnchor;
           Alignment followerAnchor;
 
-          Offset overlayOffset = overlayBox?.localToGlobal(Offset.zero) ?? Offset.zero;
-          Size overlaySize = overlayBox?.size ?? Size.zero;
+          Offset overlayOffset = box.localToGlobal(Offset.zero);
+          Size overlaySize = box.size;
 
           MediaQueryData mediaQuery = MediaQuery.of(overlay.context);
           EdgeInsets viewPadding = mediaQuery.padding + mediaQuery.viewInsets;
