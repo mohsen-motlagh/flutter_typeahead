@@ -341,13 +341,12 @@ class _FloaterState extends State<Floater> with WidgetsBindingObserver {
   }
 
   void _calculateOverlayMetrics() {
-    overlay = Overlay.maybeOf(context);
-    if (overlay != null && overlay!.context.mounted) {
-      final RenderBox? box = context.findRenderObject() as RenderBox?;
-      if (box != null && box.hasSize) {
-        overlayOffset = box.localToGlobal(Offset.zero);
-        overlaySize = box.size;
-      }
+    final RenderBox? box = context.findRenderObject() as RenderBox?;
+    if (box != null && box.hasSize) {
+      overlayOffset = box.localToGlobal(Offset.zero);
+      overlaySize = box.size;
+    } else {
+      debugPrint("RenderBox not ready; retrying...");
     }
   }
 
@@ -459,7 +458,7 @@ class _FloaterState extends State<Floater> with WidgetsBindingObserver {
         // }
 
         return CompositedTransformFollower(
-          showWhenUnlinked: false,
+          showWhenUnlinked: true,
           link: widget.link.layerLink,
           offset: getDirectionOffset(
             widget.direction,
