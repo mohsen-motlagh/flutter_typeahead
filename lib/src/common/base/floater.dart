@@ -346,10 +346,12 @@ class _FloaterState extends State<Floater> with WidgetsBindingObserver {
       overlayChildBuilder: (context) => Builder(
         builder: (context) {
           final FloaterInfo(:size, :offset) = widget.link.value;
-          OverlayState overlay = Overlay.of(context);
-
+          OverlayState? overlay = Overlay.maybeOf(context);
+          if (overlay == null || overlay.context.mounted == false) {
+            return const SizedBox();
+          }
           //final RenderBox? overlayBox = overlay.context.findRenderObject() as RenderBox?;
-          RenderBox? box = overlay.context.findRenderObject() as RenderBox?;
+          RenderBox? box = context.findRenderObject() as RenderBox?;
           if (box == null || box.hasSize == false) {
             return const SizedBox();
           }
