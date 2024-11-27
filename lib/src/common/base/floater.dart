@@ -350,11 +350,14 @@ class _FloaterState extends State<Floater> with WidgetsBindingObserver {
           if (overlay == null || overlay.context.mounted == false) {
             return const SizedBox();
           }
+          print('ksdjhgjkhgurrhg');
           //final RenderBox? overlayBox = overlay.context.findRenderObject() as RenderBox?;
           RenderBox? box = context.findRenderObject() as RenderBox?;
           if (box == null || box.hasSize == false) {
+            print('ksdjhgjkhgurrhg 11111111');
             return const SizedBox();
           }
+          print('ksdjhgjkhgurrhg 22222222');
 
           Size available;
           Alignment targetAnchor;
