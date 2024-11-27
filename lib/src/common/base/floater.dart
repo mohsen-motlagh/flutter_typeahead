@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
@@ -198,12 +196,19 @@ class _FloaterState extends State<Floater> with WidgetsBindingObserver {
 
   List<dynamic>? dependencies;
   EdgeInsets? insets;
+  OverlayState? overlay;
+  Offset overlayOffset = Offset.zero;
+  Size overlaySize = Size.zero;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     widget.link.addListener(updateOverlay);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _calculateOverlayMetrics();
+      setState(() {}); // Update state after calculating metrics
+    });
     maybeUpdateOverlay();
   }
 
@@ -338,161 +343,154 @@ class _FloaterState extends State<Floater> with WidgetsBindingObserver {
     };
   }
 
-  @override
-  Widget build(BuildContext context) {
-    OverlayState? overlay = Overlay.maybeOf(context);
-    RenderBox? box;
-    if (overlay == null || overlay.context.mounted == false) {
-      print('overlay == $overlay, overlay.context.mounted == ${overlay?.context.mounted}');
-      print('heyyyyyyy');
-      return const SizedBox();
-    } else {
-      box = overlay.context.findRenderObject() as RenderBox?;
-      print('======= , box == $box, box.hasSize == ${box?.hasSize}');
-      if (box != null && box.hasSize == true) {
-        print('heyyyyyyy 1111111111');
-        return OverlayPortal(
-          controller: controller,
-          child: widget.child,
-          overlayChildBuilder: (context) => Builder(builder: (context) {
-            final FloaterInfo(:size, :offset) = widget.link.value;
-            //if (overlay != null || overlay!.context.mounted == true && (box != null || box?.hasSize == true)) {
-            print('ksdjhgjkhgurrhg');
-            //final RenderBox? overlayBox = overlay.context.findRenderObject() as RenderBox?;
-
-            Size available;
-            Alignment targetAnchor;
-            Alignment followerAnchor;
-
-            Offset overlayOffset = box!.localToGlobal(Offset.zero);
-            Size overlaySize = box.size;
-
-            MediaQueryData mediaQuery = MediaQuery.of(overlay.context);
-            EdgeInsets viewPadding = mediaQuery.padding + mediaQuery.viewInsets;
-
-            overlayOffset = Offset(
-              max(overlayOffset.dx, viewPadding.left),
-              max(overlayOffset.dy, viewPadding.top),
-            );
-
-            overlaySize = Size(
-              overlaySize.width - viewPadding.left - viewPadding.right,
-              overlaySize.height - viewPadding.top - viewPadding.bottom,
-            );
-
-            Offset floaterOffset = offset - overlayOffset;
-
-            floaterOffset = Offset(
-              max(0, floaterOffset.dx),
-              max(0, floaterOffset.dy),
-            );
-
-            EdgeInsets padding = viewPadding;
-
-            AxisDirection direction = widget.direction;
-
-            available = getDiretionSize(
-              direction,
-              overlaySize,
-              floaterOffset,
-              widget.offset,
-              size,
-            );
-
-            if (widget.autoFlip && available.height < widget.autoFlipHeight) {
-              AxisDirection opposite = flipAxisDirection(widget.direction);
-              Size maybeAvailable = getDiretionSize(
-                opposite,
-                overlaySize,
-                floaterOffset,
-                widget.offset,
-                size,
-              );
-              if (maybeAvailable.height > available.height) {
-                direction = opposite;
-                available = maybeAvailable;
-              }
-            }
-
-            available = Size(
-              max(0, available.width),
-              max(0, available.height),
-            );
-
-            (targetAnchor, followerAnchor) = getDirectionAnchors(direction);
-            padding = getDirectionPadding(direction, padding);
-
-            BoxConstraints constraints = BoxConstraints(
-              maxWidth: available.width,
-              maxHeight: available.height,
-            );
-
-            Size target = Size(
-              min(size.width, available.width),
-              min(size.height, available.height),
-            );
-
-            if (widget.followWidth) {
-              constraints = constraints.enforce(
-                BoxConstraints(
-                  maxWidth: target.width,
-                ),
-              );
-            }
-            if (widget.followHeight) {
-              constraints = constraints.enforce(
-                BoxConstraints(
-                  maxHeight: target.height,
-                ),
-              );
-            }
-
-            return CompositedTransformFollower(
-              showWhenUnlinked: false,
-              link: widget.link.layerLink,
-              offset: getDirectionOffset(
-                direction,
-                Offset.zero,
-                widget.offset,
-              ),
-              targetAnchor: targetAnchor,
-              followerAnchor: followerAnchor,
-              child: Padding(
-                padding: padding,
-                child: MediaQuery.removePadding(
-                  context: context,
-                  child: MediaQuery.removeViewInsets(
-                    context: context,
-                    child: Align(
-                      alignment: followerAnchor,
-                      child: ConstrainedBox(
-                        constraints: constraints,
-                        child: _FloaterProvider(
-                          data: FloaterData(
-                            size: Size(
-                              constraints.maxWidth,
-                              constraints.maxHeight,
-                            ),
-                            offset: floaterOffset,
-                            direction: widget.direction,
-                            effectiveDirection: direction,
-                          ),
-                          child: Builder(
-                            builder: widget.builder,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }),
-        );
-      } else {
-        return const SizedBox();
+  void _calculateOverlayMetrics() {
+    overlay = Overlay.maybeOf(context);
+    if (overlay != null && overlay!.context.mounted) {
+      final RenderBox? box = context.findRenderObject() as RenderBox?;
+      if (box != null && box.hasSize) {
+        overlayOffset = box.localToGlobal(Offset.zero);
+        overlaySize = box.size;
       }
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // OverlayState? overlay = Overlay.maybeOf(context);
+    // RenderBox? box = context.findRenderObject() as RenderBox?;
+    // if (overlay == null || overlay.context.mounted == false) {
+    //   print('overlay == $overlay, overlay.context.mounted == ${overlay?.context.mounted}');
+    //   print('heyyyyyyy');
+    //   return const SizedBox();
+    // } else {
+    //   print('heyyyyyyy 1111111111');
+    return OverlayPortal(
+      controller: controller,
+      child: widget.child,
+      overlayChildBuilder: (context) => Builder(builder: (context) {
+        final FloaterInfo(:size, :offset) = widget.link.value;
+
+        // Size available;
+        // Alignment targetAnchor;
+        // Alignment followerAnchor;
+        Offset floaterOffset = offset - overlayOffset;
+        // Offset overlayOffset = box!.localToGlobal(Offset.zero);
+        // Size overlaySize = box.size;
+
+        // MediaQueryData mediaQuery = MediaQuery.of(overlay.context);
+        // EdgeInsets viewPadding = mediaQuery.padding + mediaQuery.viewInsets;
+
+        floaterOffset = Offset(
+          floaterOffset.dx.clamp(0, overlaySize.width),
+          floaterOffset.dy.clamp(0, overlaySize.height),
+        );
+        // overlayOffset = Offset(
+        //   max(overlayOffset.dx, viewPadding.left),
+        //   max(overlayOffset.dy, viewPadding.top),
+        // );
+
+        // overlaySize = Size(
+        //   overlaySize.width - viewPadding.left - viewPadding.right,
+        //   overlaySize.height - viewPadding.top - viewPadding.bottom,
+        // );
+
+        // Offset floaterOffset = offset - overlayOffset;
+
+        // floaterOffset = Offset(
+        //   max(0, floaterOffset.dx),
+        //   max(0, floaterOffset.dy),
+        // );
+
+        // EdgeInsets padding = viewPadding;
+
+        // AxisDirection direction = widget.direction;
+
+        // available = getDiretionSize(
+        //   direction,
+        //   overlaySize,
+        //   floaterOffset,
+        //   widget.offset,
+        //   size,
+        // );
+
+        // if (widget.autoFlip && available.height < widget.autoFlipHeight) {
+        //   AxisDirection opposite = flipAxisDirection(widget.direction);
+        //   Size maybeAvailable = getDiretionSize(
+        //     opposite,
+        //     overlaySize,
+        //     floaterOffset,
+        //     widget.offset,
+        //     size,
+        //   );
+        //   if (maybeAvailable.height > available.height) {
+        //     direction = opposite;
+        //     available = maybeAvailable;
+        //   }
+        // }
+
+        // available = Size(
+        //   max(0, available.width),
+        //   max(0, available.height),
+        // );
+
+        // (targetAnchor, followerAnchor) = getDirectionAnchors(direction);
+        // padding = getDirectionPadding(direction, padding);
+
+        // BoxConstraints constraints = BoxConstraints(
+        //   maxWidth: available.width,
+        //   maxHeight: available.height,
+        // );
+
+        // Size target = Size(
+        //   min(size.width, available.width),
+        //   min(size.height, available.height),
+        // );
+
+        // if (widget.followWidth) {
+        //   constraints = constraints.enforce(
+        //     BoxConstraints(
+        //       maxWidth: target.width,
+        //     ),
+        //   );
+        // }
+        // if (widget.followHeight) {
+        //   constraints = constraints.enforce(
+        //     BoxConstraints(
+        //       maxHeight: target.height,
+        //     ),
+        //   );
+        // }
+
+        return CompositedTransformFollower(
+          showWhenUnlinked: false,
+          link: widget.link.layerLink,
+          offset: getDirectionOffset(
+            widget.direction,
+            Offset.zero,
+            widget.offset,
+          ),
+          targetAnchor: Alignment.topCenter,
+          followerAnchor: Alignment.topCenter,
+          child: Padding(
+            padding: MediaQuery.of(context).viewPadding,
+            child: Align(
+              alignment: Alignment.center,
+              child: _FloaterProvider(
+                data: FloaterData(
+                  size: Size(overlaySize.width, overlaySize.height),
+                  offset: floaterOffset,
+                  direction: widget.direction,
+                  effectiveDirection: widget.direction,
+                ),
+                child: Builder(
+                  builder: widget.builder,
+                ),
+              ),
+            ),
+          ),
+        );
+      }),
+    );
   }
 }
 
